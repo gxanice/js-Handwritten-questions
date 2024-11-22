@@ -1,67 +1,52 @@
-// 优先级队列会因为直接执行而不等待全部任务加载会无法排序
-class TaskController {
-  constructor(maxConcurrent) {
-    // 任务列表
-    this.taskList = [];
-    // 正在执行的任务
-    this.executingTask = 0;
-    // 最大并发数
-    this.maxConcurrent = maxConcurrent;
-  }
+async function limitgetData(urls, limit) {
+  let result = []
+  // 正在进行的任务队列
+  let taskQueue = new Set()
 
-  // 添加任务
-  addTask(task, priority = 0) {
-    return new Promise((resolve, reject) => {
-      this.taskList.push({ task, resolve, reject, priority });
-    //   console.log('排序前',this.taskList);
-    //   // 根据优先级进行排序(数字越小，优先级越大，从小到大排序)
-    //   this.taskList.sort((a, b) => a.priority - b.priority);
-    //   console.log("排序后", this.taskList);
-      this._run();
-    });
-  }
+  for (const url of urls) {
+    let promise = mockRequset(url)
+      .then(res => {
+        console.log(res)
+        return res
+      })    
+      result.push(promise);  // 保存请求结果的 promise
 
-  // 执行任务
-  _run() {
-    while (this.taskList.length > 0 && this.executingTask < this.maxConcurrent) {
-      // 取出第一个任务
-      let { task, resolve, reject } = this.taskList.shift();
-      this.executingTask++;
-      task()
-        .then(resolve)
-        .catch(reject)
-        .finally(() => {
-          this.executingTask--;
-          this._run(); // 递归执行下一个任务
-        });
+      // 将正在执行的 promise 添加到 taskQueue 中
+      taskQueue.add(promise);
+      
+      // 请求完成后从 taskQueue 中移除
+      promise.then(() => taskQueue.delete(promise));
+
+    if(taskQueue.size >= limit){
+      await Promise.race(taskQueue)
     }
   }
+  return Promise.all(result)
 }
 
-// 示例任务（返回Promise的函数）
-function createTask(duration, shouldFail = false) {
-  return () =>
-    new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (shouldFail) {
-          console.log(`Task failed after ${duration}ms`);
-          reject(`Failed after ${duration}ms`);
-        } else {
-          console.log(`Task completed in ${duration}ms`);
-          resolve(`Completed in ${duration}ms`);
-        }
-      }, duration);
-    }).catch((error) => {
-      // 处理Promise拒绝的情况
-      console.error("Promise was rejected:", error);
-    });
+function mockRequset(url) {
+  return new Promise((resolve,reject) => {
+    let time = Math.random() * 1000
+    setTimeout(() => {
+      // 模拟偶尔失败的情况
+      if (Math.random() > 0.99) {
+        reject(new Error(`请求 ${url} 失败`));
+      } else {
+        resolve(`请求 ${url} 完成`);
+      }
+    }, time);
+  })
 }
 
-// 创建一个最多同时运行3个任务的执行器
-const executor = new TaskController(3);
+async function test() {
+  const urls = Array.from({ length: 10 }, (_, i) => `任务${i + 1}`)
+  try {
+    const results = await limitgetData(urls, 3);
+    console.log('所有请求完成！');
+    console.log('最终结果:', results);
+  } catch (err) {
+    console.error('发生错误:', err);
+  }
+}
 
-// 添加任务到执行器
-executor.addTask(createTask(1000)); // 优先级1
-executor.addTask(createTask(2000, true)); // 优先级2，将失败
-executor.addTask(createTask(500)); // 优先级3
-executor.addTask(createTask(1500)); // 优先级4
+test()
