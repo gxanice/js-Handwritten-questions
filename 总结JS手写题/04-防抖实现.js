@@ -8,3 +8,5 @@ function debounce(fn, delay) {
         }, delay);
     };
 }
+
+// 第一次使用时能够直接执行的防抖

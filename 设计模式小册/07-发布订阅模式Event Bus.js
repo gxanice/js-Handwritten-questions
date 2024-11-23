@@ -5,7 +5,6 @@ class EventBus {
   }
 
   on(event, callback) {
-    // 如果事件没有被创建过，则初始化一个空数组
     if (!this.events[event]) {
       this.events[event] = [];
     }
@@ -15,17 +14,14 @@ class EventBus {
 
   // emit方法用于触发目标事件，它接受事件名和监听函数入参作为参数
   emit(event, ...args) {
-    // 如果事件没有被创建过，则直接返回
     if (!this.events[event]) return;
     // 这里需要对 this.events[eventName] 做一次浅拷贝，主要目的是为了避免通过 once 安装的监听器在移除的过程中出现顺序问题
     const handlers = this.events[event].slice();
-    // 遍历目标事件的监听函数队列，并执行它们
     handlers.forEach((callback) => {
       callback(...args);
     });
   }
 
-  // 移除某个事件回调队列里的指定回调函数
   off(event, callback) {
     if (!this.events[event]) return;
     // 遍历目标事件的监听函数队列，找到指定回调函数的索引并移除
@@ -35,7 +31,6 @@ class EventBus {
     }
   }
 
-  // 为事件注册单次监听器
   once(event, cb) {
     // 对回调函数进行包装，使其执行完毕自动被移除
     const wrapper = (...args) => {

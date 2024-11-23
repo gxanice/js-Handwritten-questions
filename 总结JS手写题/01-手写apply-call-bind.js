@@ -17,5 +17,10 @@ Function.prototype.hyapply = function (thisArg, otherArgs) {
     delete thisArg.fn
 }
 
+Function.prototype.myCall = function (thisArg, ...args) {
+    thisArg.fn = this
+    return thisArg.fn(...args)
+}
+
 // foo.hyapply({name:'xm'})
 foo.hyapply(123, ['why', 18])
