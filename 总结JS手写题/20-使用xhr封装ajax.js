@@ -1,31 +1,38 @@
-function ajaxPromise(url, method, data) {
-    return new Promise((resolve, reject) => {
-        // 1.创建XMLHttpRequest对象
-        const xhr = new XMLHttpRequest();
-
-        // 2.与服务器建立连接
-        xhr.open(method, url, true);
-
-        // 3.给服务器发送数据
-        xhr.send(method === "POST" && data ? JSON.stringify(data) : null);
-
-        // 4.接收请求
-        xhr.addEventListener("readystatechange", function () {
-            if (this.readyState === 4) {
-                if (this.status >= 200 && this.status < 300) {
-                    resolve(JSON.parse(this.responseText));
-                } else {
-                    reject(this.status);
-                }
-            }
-        });
-    });
+let xhr = new XMLHttpRequest()
+xhr.open('GET', 'https://dog.ceo/api/breeds/image/random', true)
+xhr.onreadystatechange = function() {
+    if(this.readyState !== 4) return
+    if(this.status === 200){
+        handle(this.response)
+    }else{
+        console.error(this.statusText)
+    }
+}
+xhr.onerror = function() {
+    console.error(this.statusText)
 }
 
-ajaxPromise("GET", "https://dog.ceo/api/breeds/image/random")
-    .then((res) => {
-        console.log(res);
+
+function myAjax(url){
+    return new Promise((resolve,reject) => {
+        let xhr = new XMLHttpRequest()
+        xhr.open('GET',url,true)
+        xhr.onreadystatechange = function(){
+            if(this.readyState !== 4) return
+            if(this.status === 200){
+                resolve(this.response)
+            }else{
+                reject(new Error(this.statusText))
+            }
+        }
+        xhr.onerror = function(){
+            reject(new Error(this.statusText))
+        }
+        xhr.send()
     })
-    .catch((err) => {
-        console.error(err);
-    });
+}
+myAjax('https://dog.ceo/api/breeds/image/random').then(res => {
+    console.log(res)
+}).catch(err => {
+    console.error(err)
+})

@@ -32,3 +32,5 @@ const obj = {
 
 const cloneObj = deepClone(obj);
 console.log(cloneObj);
+cloneObj.info.school = '高中';
+console.log(obj.info.school); // 大学

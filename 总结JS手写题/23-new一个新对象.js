@@ -14,17 +14,19 @@ function newCreate(fn,...args) {
     return obj instanceof Object ? result : obj
 }
 
-function Person(name) {
-  this.name = name;
-  this.sayName = function () {
-    console.log("name", this.name);
-  };
-  return {
-    name: "maomao",
-    sayName: function () {
-      console.log("name", this.name);
+class Person {
+  constructor(name) {
+    this.name = name
+    this.sayName = function () {
+      console.log("name", this.name)
     }
-  };
+    return {
+      name: "maomao",
+      sayName: function () {
+        console.log("name", this.name)
+      }
+    }
+  }
 }
 const person = newCreate(Person, "ayetongzhi");
 console.log("person", person);
